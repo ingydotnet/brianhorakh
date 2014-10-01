@@ -1,0 +1,135 @@
+---
++grammar: data-tlc
++toprule: data_tlc
++version: '1.0'
+bind_statement:
+  .all:
+  - .rgx: \s*bind\s*
+  - .any:
+    - .ref: variable
+    - .ref: tag
+  - .rgx: \s*
+  - .any:
+    - .ref: variable
+    - .ref: scalar
+    - .ref: tag
+block:
+  .all:
+  - .rgx: '{{\s*'
+  - +min: 1
+    .any:
+    - .ref: jscomment
+    - .ref: cmdline
+  - .rgx: \s*}}
+boolean:
+  .rgx: (true|false)
+cmdline:
+  +min: 1
+  .any:
+  - .ref: set_statement
+  - .ref: bind_statement
+  - .ref: if_statement
+  - .ref: foreach_statement
+  - .ref: while_statement
+  - .ref: command
+  .sep:
+    +eok: 1
+    .rgx: \s*;\s*
+command:
+  .all:
+  - .rgx: \s*(([A-Za-z0-9_]+)#)?([A-Za-z0-9_]+)\s*
+  - +min: 0
+    .ref: value
+    .sep:
+      .rgx: \s*
+data_tlc:
+  +min: 1
+  .any:
+  - .ref: jscomment
+  - .ref: if_statement
+  - .ref: while_statement
+  - .ref: foreach_statement
+  - .ref: set_statement
+  - .ref: bind_statement
+  - .ref: command
+  .sep:
+    +eok: 1
+    +min: 0
+    .ref: lb
+foreach_statement:
+  .all:
+  - .rgx: \s*foreach\s*
+  - .ref: variable
+  - .rgx: \s*in\s*
+  - .ref: variable
+  - .rgx: \s*
+  - .ref: block
+hexcolor:
+  .rgx: '#([A-Fa-f0-9]{6})'
+if_statement:
+  .all:
+  - .rgx: \s*if\s*
+  - .rgx: \(\s*
+  - .ref: command
+  - .rgx: \s*\)\s*
+  - .ref: block
+  - +max: 1
+    .all:
+    - .rgx: \s*else\s*
+    - .ref: block
+integer:
+  .rgx: \s*(\-?[0-9]+)\s*
+jscomment:
+  .rgx: \s*/\*.*?\*/\s*
+lb:
+  .any:
+  - .rgx: \s*;\s*
+  - .rgx: \s*\r?\n\s*
+longopt:
+  .any:
+  - .all:
+    - .rgx: --([a-zA-Z][a-z0-9A-Z\-]+)=
+    - .ref: value
+  - .rgx: --([a-zA-Z][a-z0-9A-Z\-]+)
+scalar:
+  .rgx: '''([^'']*)'''
+set_statement:
+  .all:
+  - .rgx: \s*set\s*
+  - .any:
+    - .ref: variable
+    - .ref: tag
+  - .rgx: \s*
+  - .any:
+    - .ref: variable
+    - .ref: scalar
+    - .ref: tag
+    - .ref: integer
+    - .ref: boolean
+    - .ref: hexcolor
+    - .ref: tag
+  - .rgx: \s*
+  - +min: 0
+    .ref: value
+    .sep:
+      .rgx: \s*
+tag:
+  .rgx: \~([A-Za-z0-9\-_]+)
+value:
+  .any:
+  - .ref: longopt
+  - .ref: variable
+  - .ref: integer
+  - .ref: scalar
+  - .ref: boolean
+  - .ref: tag
+  - .ref: hexcolor
+variable:
+  .rgx: \$([A-Za-z_][A-Za-z0-9_]*)
+while_statement:
+  .all:
+  - .rgx: \s*while\s*
+  - .rgx: \(\s*
+  - .ref: command
+  - .rgx: \s*\)\s*
+  - .ref: block
