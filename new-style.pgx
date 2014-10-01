@@ -21,7 +21,7 @@ data-tlc: (
   | set-statement
   | bind-statement
   | command
-)+ %% lb*
+)+ %% lb* -
 
 ## ** BIND-STATEMENT **
 ## bind $var 'something';    (jsonpath lookup)
@@ -30,11 +30,11 @@ data-tlc: (
 ## bind ~tag '#tagid';       jQuery('#tagid')
 ## bind ~tag $tagid;          jQuery($tagid)
 bind-statement:
-  /- 'bind' -/
+  /- 'bind' /
   (
   | variable
   | tag
-  ) -
+  ) +
   (
   | variable
   | scalar
@@ -43,7 +43,7 @@ bind-statement:
 ## set $var 'something'
 ## set $var $copy;
 set-statement:
-  /- 'set' -/
+  /- 'set' /
   (variable | tag) -
   (
   | variable
@@ -69,45 +69,46 @@ cmdline: (
   | foreach-statement
   | while-statement
   | command
-)+ %% /- SEMI -/
+)+ %% /- ';' /
 
 block:
-  /'{{' -/
+  /- '{{' /
   (
   | jscomment
   | cmdline
   )+
-  /- '}}'/
+  /- '}}' /
 
 while-statement:
-  /- 'while' -/
-  /- LPAREN -/
+  /- 'while' - '(' /
   command
-  /- RPAREN -/
+  /- ')'/
   block
 
 if-statement:
-  /- 'if' -/
-  / LPAREN -/
+  /- 'if' - '(' /
   command
-  /- RPAREN -/
+  /- ')' /
   block
   (
-    /- 'else' -/
+    /- 'else' /
     block
   )?
 
 foreach-statement:
-  /- 'foreach' -/
-  (variable)
-  /- 'in' -/
-  (variable)
+  /- 'foreach' /
+  variable
+  /- 'in' /
+  variable
   -
   block
 
 ## ** COMMAND **
 ## module_name#command_name --opts=...
-command: /- (([A-Za-z0-9_]+) '#')?([A-Za-z0-9_]+) -/ value* % -
+command: /-
+  (: ( WORD+) '#')?
+  ( WORD+)
+/ value* % -
 
 ## ** DATA TYPES **
 value:
@@ -120,21 +121,34 @@ value:
   | hexcolor
 
 longopt:
-  | / '--' ( [a-zA-Z][a-z0-9A-Z\-]+ ) '=' / value
-  | / '--' ( [a-zA-Z][a-z0-9A-Z\-]+ ) /
-variable: / '$' ( [A-Za-z_][A-Za-z0-9_]* ) /
-integer: /- ( DASH? DIGIT+ ) -/
-scalar: / SINGLE ([^ SINGLE]*) SINGLE /         # not yet allows escaped single quotes inside
-boolean: / (true|false) /
+  | /- '--' ( ALPHA [ ALNUMS DASH ]+ ) '=' / value
+  | /- '--' ( ALPHA [ ALNUMS DASH ]+ ) /
+
+variable: /- '$' ( [ ALPHAS UNDER ] WORD* ) /
+
+integer: /- ( DASH? DIGIT+ ) /
+
+scalar: /-
+  SINGLE (
+    (:
+      BACK SINGLE |
+      [^ SINGLE]
+    )*
+  )
+  SINGLE
+/
+
+boolean: /- (
+  'true' |
+  'false'
+) /
 
 ## ~tag is a reference to a jquery object
 ## tag table should maintain reference to tags on DOM
-tag: / '~' ([A-Za-z0-9\-_]+) /
+tag: /- '~' ([ WORDS DASH ]+) /
 
-hexcolor: / '#' ([A-Fa-f0-9]{6}) /
+hexcolor: /- '#' ( HEX{6}) /
 ## ** END DATA TYPES **
 
-jscomment: /- '/*' ANY*? '*/' -/
-lb:
-  | /- SEMI -/
-  | /- EOL -/
+jscomment: /- '/*' ANY*? '*/' /
+lb: /- ( ';' | EOL ) /
