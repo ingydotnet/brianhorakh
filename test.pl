@@ -15,4 +15,4 @@ my $parser = Pegex::Parser->new(
     debug => 1,
 );
 
-XXX $parser->parse("set  ' world'; apply --append;");
+XXX $parser->parse("set \$x ' world'; apply --append;");

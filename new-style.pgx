@@ -13,7 +13,8 @@
 ## ** DATA-TLC**
 ## data-tlc is either 'if-statement', 'bind-statement' or 'command', separated by semi-solons (;)
 ## the last semi-colon is optional (in Pegex %% defines that optional alternation)
-data-tlc: (
+data-tlc: data-tlc-list+ %% lb* -
+data-tlc-list: (
   | jscomment
   | if-statement
   | while-statement
@@ -21,7 +22,7 @@ data-tlc: (
   | set-statement
   | bind-statement
   | command
-)+ %% lb* -
+)
 
 ## ** BIND-STATEMENT **
 ## bind $var 'something';    (jsonpath lookup)
@@ -44,7 +45,7 @@ bind-statement:
 ## set $var $copy;
 set-statement:
   /- 'set' /
-  (variable | tag) -
+  (variable | tag)
   (
   | variable
   | scalar
@@ -53,7 +54,7 @@ set-statement:
   | boolean
   | hexcolor
   | tag
-  ) -
+  )
   value* % -
 
 ## ** IF/WHILE-STATEMENT **
@@ -62,14 +63,15 @@ set-statement:
 ## block: /{{~/ (block | set-statement | bind-statement | command)+ %% /~<SEMI>~/ /~}}/
 ## block: /{{~/ <lb>* (data-tlc)+ %% /~<SEMI>~/ <lb>* /~}}/
 ## foreach $item in $items {{ command1; }}
-cmdline: (
+cmdline: cmdline-list+ %% /- ';' /
+cmdline-list: (
   | set-statement
   | bind-statement
   | if-statement
   | foreach-statement
   | while-statement
   | command
-)+ %% /- ';' /
+)
 
 block:
   /- '{{' /
@@ -128,8 +130,7 @@ variable: /- '$' ( [ ALPHAS UNDER ] WORD* ) /
 
 integer: /- ( DASH? DIGIT+ ) /
 
-scalar: /-
-  SINGLE (
+scalar: /- SINGLE (
     (:
       BACK SINGLE |
       [^ SINGLE]

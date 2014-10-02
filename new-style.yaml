@@ -29,20 +29,22 @@ boolean:
   .rgx: \s*(true|false)
 cmdline:
   .all:
-  - .any: &1
-    - .ref: set_statement
-    - .ref: bind_statement
-    - .ref: if_statement
-    - .ref: foreach_statement
-    - .ref: while_statement
-    - .ref: command
+  - .ref: cmdline_list
   - +min: 0
     -flat: 1
     .all:
     - .rgx: \s*;
-    - .any: *1
+    - .ref: cmdline_list
   - +max: 1
     .rgx: \s*;
+cmdline_list:
+  .any:
+  - .ref: set_statement
+  - .ref: bind_statement
+  - .ref: if_statement
+  - .ref: foreach_statement
+  - .ref: while_statement
+  - .ref: command
 command:
   .all:
   - .rgx: -(?:(\w+)\#)?(\w+)
@@ -57,24 +59,26 @@ command:
 data_tlc:
   .all:
   - .all:
-    - .any: &2
-      - .ref: jscomment
-      - .ref: if_statement
-      - .ref: while_statement
-      - .ref: foreach_statement
-      - .ref: set_statement
-      - .ref: bind_statement
-      - .ref: command
+    - .ref: data_tlc_list
     - +min: 0
       -flat: 1
       .all:
       - +min: 0
         .ref: lb
-      - .any: *2
+      - .ref: data_tlc_list
     - +max: 1
       +min: 0
       .ref: lb
   - .ref: _
+data_tlc_list:
+  .any:
+  - .ref: jscomment
+  - .ref: if_statement
+  - .ref: while_statement
+  - .ref: foreach_statement
+  - .ref: set_statement
+  - .ref: bind_statement
+  - .ref: command
 foreach_statement:
   .all:
   - .rgx: \s*foreach
@@ -108,14 +112,13 @@ longopt:
     - .ref: value
   - .rgx: \s*\-\-([a-zA-Z][a-zA-Z0-9\-]+)
 scalar:
-  .rgx: -'((?:\\'|[^'])*)'
+  .rgx: \s*'((?:\\'|[^'])*)'
 set_statement:
   .all:
   - .rgx: \s*set
   - .any:
     - .ref: variable
     - .ref: tag
-  - .ref: _
   - .any:
     - .ref: variable
     - .ref: scalar
@@ -124,7 +127,6 @@ set_statement:
     - .ref: boolean
     - .ref: hexcolor
     - .ref: tag
-  - .ref: _
   - +max: 1
     .all:
     - .ref: value
